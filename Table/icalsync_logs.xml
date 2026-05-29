@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : icalsync_logs.xml
+    Description:
+        Estructura de la tabla icalsync_logs.
+        Registro de auditoría de todas las operaciones de sincronización.
+-->
+<table>
+    <column>
+        <name>id</name>
+        <type>serial</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>account_id</name>
+        <type>integer</type>
+    </column>
+    <column>
+        <name>entity_type</name>
+        <type>character varying(50)</type>
+    </column>
+    <column>
+        <name>entity_id</name>
+        <type>integer</type>
+    </column>
+    <column>
+        <name>caldav_uid</name>
+        <type>character varying(255)</type>
+    </column>
+    <column>
+        <name>operation</name>
+        <type>character varying(20)</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>status</name>
+        <type>character varying(20)</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>message</name>
+        <type>text</type>
+    </column>
+    <column>
+        <name>details</name>
+        <type>text</type>
+    </column>
+    <column>
+        <name>created_at</name>
+        <type>timestamp</type>
+        <null>NO</null>
+    </column>
+    <constraint>
+        <name>icalsync_logs_pkey</name>
+        <type>PRIMARY KEY (id)</type>
+    </constraint>
+    <constraint>
+        <name>ca_logs_account</name>
+        <type>FOREIGN KEY (account_id) REFERENCES icalsync_accounts (id) ON DELETE SET NULL ON UPDATE CASCADE</type>
+    </constraint>
+</table>

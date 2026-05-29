@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : eventos.xml
+    Description:
+        Extensión de la tabla eventos de PlanetaEscenario.
+        Añade columnas de sincronización iCalSync.
+-->
+<table>
+    <column>
+        <name>idsincronizacion</name>
+        <type>character varying(255)</type>
+    </column>
+    <column>
+        <name>ultima_modificacion</name>
+        <type>timestamp</type>
+    </column>
+</table>

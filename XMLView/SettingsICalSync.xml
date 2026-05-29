@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : SettingsICalSync.xml
+    Author     : Carlos Garcia Gomez <carlos@facturascripts.com>
+    Description:
+        Vista para la configuración de cuentas y calendarios iCalSync.
+        Incluye configuración de resolución de conflictos (T3.1),
+        notificaciones por email (T3.5) y rendimiento (T3.4).
+-->
+<view>
+    <columns>
+        <column name="accounts" order="1">
+            <widget type="text" fieldname="account_name" required="true">
+                <title>account-name</title>
+                <description>iCloud-apple-id</description>
+            </widget>
+            <widget type="textarea" fieldname="apple_id" required="true">
+                <title>icloud-apple-id</title>
+            </widget>
+            <widget type="password" fieldname="app_specific_password" required="true">
+                <title>icloud-password</title>
+            </widget>
+            <widget type="url" fieldname="principal_url" required="false">
+                <title>principal-url</title>
+            </widget>
+            <widget type="checkbox" fieldname="enabled" required="false">
+                <title>enabled</title>
+            </widget>
+        </column>
+        <column name="calendars" order="2">
+            <widget type="select" fieldname="account_id" required="true">
+                <title>account</title>
+                <source items="account-list"/>
+            </widget>
+            <widget type="text" fieldname="calendar_name" required="true">
+                <title>calendar-name</title>
+            </widget>
+            <widget type="url" fieldname="calendar_url" required="true">
+                <title>calendar-url</title>
+            </widget>
+            <widget type="select" fieldname="calendar_type" required="true">
+                <title>calendar-type</title>
+                <values>
+                    <value>shared</value>
+                    <value>private</value>
+                </values>
+            </widget>
+            <widget type="checkbox" fieldname="enabled" required="false">
+                <title>active</title>
+            </widget>
+        </column>
+        <column name="settings" order="3">
+            <widget type="select" fieldname="conflict_strategy" required="true">
+                <title>conflict-strategy</title>
+                <source items="conflict-strategies"/>
+            </widget>
+            <widget type="checkbox" fieldname="email_notifications_enabled" required="false">
+                <title>email-notifications</title>
+            </widget>
+            <widget type="select" fieldname="email_notification_level" required="true">
+                <title>email-notification-level</title>
+                <values>
+                    <value>error</value>
+                    <value>warning</value>
+                    <value>info</value>
+                </values>
+            </widget>
+            <widget type="text" fieldname="admin_email" required="false">
+                <title>admin-email</title>
+            </widget>
+            <widget type="number" fieldname="batch_size" required="true">
+                <title>batch-size</title>
+            </widget>
+            <widget type="number" fieldname="max_execution_time" required="true">
+                <title>max-execution-time</title>
+            </widget>
+        </column>
+    </columns>
+</view>

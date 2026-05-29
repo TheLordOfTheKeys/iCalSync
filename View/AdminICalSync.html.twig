@@ -1,0 +1,330 @@
+{#**
+ * This file is part of ICalSync plugin for FacturaScripts
+ * Copyright (C) 2025 Carlos Garcia Gomez <carlos@facturascripts.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *#}
+
+{% extends "Master/MenuTemplate.html.twig" %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4">
+        <i class="fa-solid fa-calendar-check me-2"></i>
+        {{ i18n.trans('icalsync-config-title') }}
+    </h1>
+
+    {% if fsc.errorMessage is not empty %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ fsc.errorMessage }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    {% if fsc.testSuccess is same as(true) %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-circle-check me-1"></i> {{ i18n.trans('test-connection-success') }}
+        {% if fsc.testMessage %}<br><small>{{ fsc.testMessage }}</small>{% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% elseif fsc.testSuccess is same as(false) %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ i18n.trans('test-connection-failure') }}
+        {% if fsc.testMessage %}<br><small>{{ fsc.testMessage }}</small>{% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    {% if fsc.syncStats is not null %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fa-solid fa-sync me-1"></i> Sincronización completada:
+        Creados: {{ fsc.syncStats.created }} |
+        Actualizados: {{ fsc.syncStats.updated }} |
+        Borrados: {{ fsc.syncStats.deleted }} |
+        Errores: {{ fsc.syncStats.errors }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="accounts-tab" data-bs-toggle="tab" data-bs-target="#accounts" type="button" role="tab">
+                <i class="fa-solid fa-users me-1"></i> {{ i18n.trans('accounts') }}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="conflicts-tab" data-bs-toggle="tab" data-bs-target="#conflicts" type="button" role="tab">
+                <i class="fa-solid fa-exclamation-triangle me-1"></i> {{ i18n.trans('sync-conflicts') }}
+                {% if fsc.conflicts|length > 0 %}
+                <span class="badge bg-warning text-dark">{{ fsc.conflicts|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="errors-tab" data-bs-toggle="tab" data-bs-target="#errors" type="button" role="tab">
+                <i class="fa-solid fa-bug me-1"></i> {{ i18n.trans('sync-errors') }}
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Accounts Tab -->
+        <div class="tab-pane fade show active" id="accounts" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-plus me-1"></i> {{ i18n.trans('add-account') }}</span>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{{ fsc.url() }}">
+                                <input type="hidden" name="action" value="save">
+                                <div class="mb-3">
+                                    <label class="form-label">{{ i18n.trans('account-name') }}</label>
+                                    <input type="text" name="account_name" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">{{ i18n.trans('icloud-apple-id') }}</label>
+                                    <input type="email" name="apple_id" class="form-control" required autocomplete="username">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">{{ i18n.trans('app-specific-password') }}</label>
+                                    <input type="password" name="app_specific_password" class="form-control" required autocomplete="current-password">
+                                    <div class="form-text">{{ i18n.trans('app-specific-password-help') }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">{{ i18n.trans('calendar-url') }}</label>
+                                    <input type="text" name="calendar_url" class="form-control" placeholder="https://pXX-caldav.icloud.com/...">
+                                    <div class="form-text">{{ i18n.trans('calendar-url-help') }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">{{ i18n.trans('sync-frequency') }}</label>
+                                    <select name="sync_frequency_minutes" class="form-select">
+                                        <option value="5">5 {{ i18n.trans('minutes') }}</option>
+                                        <option value="15" selected>15 {{ i18n.trans('minutes') }}</option>
+                                        <option value="30">30 {{ i18n.trans('minutes') }}</option>
+                                        <option value="60">60 {{ i18n.trans('minutes') }}</option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" name="enabled" value="1" class="form-check-input" id="accountEnabled" checked>
+                                    <label class="form-check-label" for="accountEnabled">{{ i18n.trans('enabled') }}</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa-solid fa-save me-1"></i> {{ i18n.trans('save') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fa-solid fa-users me-1"></i> {{ i18n.trans('accounts') }}
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ i18n.trans('account-name') }}</th>
+                                        <th>{{ i18n.trans('icloud-apple-id') }}</th>
+                                        <th>{{ i18n.trans('enabled') }}</th>
+                                        <th>{{ i18n.trans('actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for account in fsc.accounts %}
+                                    <tr>
+                                        <td>{{ account.account_name }}</td>
+                                        <td>{{ account.apple_id }}</td>
+                                        <td>
+                                            {% if account.enabled %}
+                                            <span class="badge bg-success">{{ i18n.trans('account-enabled') }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ i18n.trans('account-disabled') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ fsc.url() }}?action=test-connection&id={{ account.id }}" class="btn btn-sm btn-outline-primary" title="{{ i18n.trans('test-connection') }}">
+                                                <i class="fa-solid fa-plug"></i>
+                                            </a>
+                                            <a href="{{ fsc.url() }}?action=delete-account&id={{ account.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ i18n.trans('are-you-sure') }}')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-muted text-center">{{ i18n.trans('no-data') }}</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fa-solid fa-calendar me-1"></i> {{ i18n.trans('calendar') }}
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ i18n.trans('calendar-name') }}</th>
+                                        <th>{{ i18n.trans('source-entity') }}</th>
+                                        <th>{{ i18n.trans('active') }}</th>
+                                        <th>{{ i18n.trans('actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cal in fsc.calendars %}
+                                    <tr>
+                                        <td>{{ cal.calendar_name }}</td>
+                                        <td>{{ cal.calendar_type }}</td>
+                                        <td>
+                                            {% if cal.enabled %}
+                                            <span class="badge bg-success">{{ i18n.trans('active') }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ i18n.trans('inactive') }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ fsc.url() }}?action=toggle-calendar&id={{ cal.id }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="fa-solid fa-power-off"></i>
+                                            </a>
+                                            <a href="{{ fsc.url() }}?action=sync-calendar&id={{ cal.id }}" class="btn btn-sm btn-outline-success" title="{{ i18n.trans('force-sync') }}">
+                                                <i class="fa-solid fa-sync"></i>
+                                            </a>
+                                            <a href="{{ fsc.url() }}?action=delete-calendar&id={{ cal.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ i18n.trans('are-you-sure') }}')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr><td colspan="4" class="text-muted text-center">{{ i18n.trans('no-data') }}</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="{{ fsc.url() }}?action=force-sync" class="btn btn-primary" onclick="return confirm('{{ i18n.trans('are-you-sure') }}')">
+                            <i class="fa-solid fa-sync me-1"></i> {{ i18n.trans('force-sync') }}
+                        </a>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#forceExportModal">
+                            <i class="fa-solid fa-cloud-upload-alt me-1"></i> {{ i18n.trans('force-export-all') }}
+                        </button>
+                    </div>
+
+                    <!-- Force Export Modal -->
+                    <div class="modal fade" id="forceExportModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation me-1"></i>{{ i18n.trans('force-export-all-title') }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{{ i18n.trans('force-export-all-warning') }}</p>
+                                    <ul>
+                                        <li>{{ i18n.trans('force-export-all-detail-1') }}</li>
+                                        <li>{{ i18n.trans('force-export-all-detail-2') }}</li>
+                                        <li>{{ i18n.trans('force-export-all-detail-3') }}</li>
+                                    </ul>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ i18n.trans('cancel') }}</button>
+                                    <a href="{{ fsc.url() }}?action=force-export-all" class="btn btn-danger">{{ i18n.trans('force-export-all-confirm') }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conflicts Tab -->
+        <div class="tab-pane fade" id="conflicts" role="tabpanel">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-exclamation-triangle me-1"></i> {{ i18n.trans('conflicts-pending') }}</span>
+                    <a href="{{ fsc.url() }}?action=resolve-all-conflicts" class="btn btn-sm btn-outline-warning">
+                        <i class="fa-solid fa-check-double me-1"></i> {{ i18n.trans('resolve-all-conflicts') }}
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ i18n.trans('entity') }}</th>
+                                <th>{{ i18n.trans('entity-id') }}</th>
+                                <th>{{ i18n.trans('message') }}</th>
+                                <th>{{ i18n.trans('actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for conflict in fsc.conflicts %}
+                            <tr class="table-warning">
+                                <td>{{ conflict.entity_type }}</td>
+                                <td>{{ conflict.entity_id }}</td>
+                                <td>{{ conflict.error_message }}</td>
+                                <td class="text-nowrap">
+                                    <a href="{{ fsc.url() }}?action=resolve-conflict-local&id={{ conflict.id }}" class="btn btn-sm btn-success">
+                                        <i class="fa-solid fa-check me-1"></i> {{ i18n.trans('resolve-local') }}
+                                    </a>
+                                    <a href="{{ fsc.url() }}?action=resolve-conflict-remote&id={{ conflict.id }}" class="btn btn-sm btn-info">
+                                        <i class="fa-solid fa-cloud-upload-alt me-1"></i> {{ i18n.trans('resolve-remote') }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-muted text-center">{{ i18n.trans('no-conflicts-found') }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Errors Tab -->
+        <div class="tab-pane fade" id="errors" role="tabpanel">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fa-solid fa-bug me-1"></i> {{ i18n.trans('sync-errors') }}
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ i18n.trans('date') }}</th>
+                                <th>{{ i18n.trans('operation') }}</th>
+                                <th>{{ i18n.trans('message') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for err in fsc.recentErrors %}
+                            <tr class="table-danger">
+                                <td class="text-nowrap">{{ err.created_at }}</td>
+                                <td>{{ err.operation }}</td>
+                                <td>{{ err.message }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-muted text-center">{{ i18n.trans('no-data') }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

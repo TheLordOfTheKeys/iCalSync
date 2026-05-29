@@ -1,0 +1,220 @@
+{#**
+ * This file is part of ICalSync plugin for FacturaScripts
+ * Copyright (C) 2025 Carlos Garcia Gomez <carlos@facturascripts.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *#}
+
+{% extends "Master/MenuTemplate.html.twig" %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4">
+        <i class="fa-solid fa-chart-bar me-2"></i>
+        {{ i18n.trans('icalsync-audit-report') }}
+    </h1>
+
+    <!-- Filter Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{{ fsc.url() }}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">{{ i18n.trans('filter-date-range') }}</label>
+                    <input type="date" name="datefrom" class="form-control" value="{{ fsc.filterDateFrom }}" placeholder="{{ i18n.trans('from') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <input type="date" name="dateto" class="form-control" value="{{ fsc.filterDateTo }}" placeholder="{{ i18n.trans('to') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ i18n.trans('filter-operation') }}</label>
+                    <select name="operation" class="form-select">
+                        {% for value, label in fsc.getOperationOptions() %}
+                        <option value="{{ value }}" {% if fsc.filterOperation == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{{ i18n.trans('filter-status') }}</label>
+                    <select name="status" class="form-select">
+                        {% for value, label in fsc.getStatusOptions() %}
+                        <option value="{{ value }}" {% if fsc.filterStatus == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-filter me-1"></i> {{ i18n.trans('filter') }}
+                    </button>
+                    <a href="{{ fsc.url() }}?action=export-csv&datefrom={{ fsc.filterDateFrom }}&dateto={{ fsc.filterDateTo }}&operation={{ fsc.filterOperation }}&status={{ fsc.filterStatus }}" class="btn btn-success">
+                        <i class="fa-solid fa-download me-1"></i> {{ i18n.trans('export-to-csv') }}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Widgets -->
+    {% if fsc.stats.total > 0 %}
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-primary h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ i18n.trans('total') }}</h5>
+                    <p class="display-6">{{ fsc.stats.total }}</p>
+                    <small>{{ i18n.trans('operations') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-success h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ i18n.trans('status-success') }}</h5>
+                    <p class="display-6">{{ fsc.stats.success }}</p>
+                    <small>{{ fsc.stats.success_rate }}% {{ i18n.trans('success') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-danger h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ i18n.trans('status-error') }}</h5>
+                    <p class="display-6">{{ fsc.stats.error }}</p>
+                    <small>{{ fsc.stats.error_rate }}% {{ i18n.trans('error') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-white bg-warning h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ i18n.trans('sync-conflicts') }}</h5>
+                    <p class="display-6">{{ fsc.stats.conflict }}</p>
+                    <small>{{ i18n.trans('pending') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breakdown Rows -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-chart-pie me-1"></i> {{ i18n.trans('filter-operation') }}
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        {% for op, count in fsc.stats.by_operation %}
+                        <tr>
+                            <td>{{ op }}</td>
+                            <td class="text-end">{{ count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-layer-group me-1"></i> {{ i18n.trans('filter-entity-type') }}
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        {% for entity, count in fsc.stats.by_entity %}
+                        <tr>
+                            <td>{{ entity }}</td>
+                            <td class="text-end">{{ count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fa-solid fa-info-circle me-1"></i> {{ i18n.trans('sync-log-empty') }}
+    </div>
+    {% endif %}
+
+    <!-- Detail Table -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fa-solid fa-table me-1"></i> {{ i18n.trans('detail') }}
+            <span class="badge bg-secondary ms-2">{{ fsc.totalCount }} {{ i18n.trans('records') }}</span>
+        </div>
+        <div class="card-body p-0">
+            {% if fsc.logEntries|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ i18n.trans('date') }}</th>
+                            <th>{{ i18n.trans('filter-operation') }}</th>
+                            <th>{{ i18n.trans('filter-status') }}</th>
+                            <th>{{ i18n.trans('filter-entity-type') }}</th>
+                            <th>{{ i18n.trans('entity-id') }}</th>
+                            <th>{{ i18n.trans('message') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in fsc.logEntries %}
+                        <tr class="{% if entry.status == 'error' %}table-danger{% elseif entry.status == 'conflict' %}table-warning{% elseif entry.status == 'success' %}table-success{% endif %}">
+                            <td class="text-nowrap">{{ entry.created_at }}</td>
+                            <td>{{ entry.operation }}</td>
+                            <td>
+                                {% if entry.status == 'success' %}
+                                <span class="badge bg-success">{{ i18n.trans('status-success') }}</span>
+                                {% elseif entry.status == 'error' %}
+                                <span class="badge bg-danger">{{ i18n.trans('status-error') }}</span>
+                                {% elseif entry.status == 'conflict' %}
+                                <span class="badge bg-warning text-dark">{{ i18n.trans('sync-status-conflict') }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ i18n.trans('status-skipped') }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ entry.entity_type }}</td>
+                            <td>{{ entry.entity_id }}</td>
+                            <td class="text-truncate" style="max-width: 300px;">{{ entry.message }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-3 text-muted">{{ i18n.trans('sync-log-empty') }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if fsc.totalCount > fsc.limit %}
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            {% set totalPages = (fsc.totalCount / fsc.limit)|round(0, 'ceil') %}
+            {% for p in 1..totalPages %}
+            {% if p == fsc.page %}
+            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="{{ fsc.url() }}?page={{ p }}&datefrom={{ fsc.filterDateFrom }}&dateto={{ fsc.filterDateTo }}&operation={{ fsc.filterOperation }}&status={{ fsc.filterStatus }}">{{ p }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

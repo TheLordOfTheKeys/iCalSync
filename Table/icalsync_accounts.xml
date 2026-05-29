@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : icalsync_accounts.xml
+    Description:
+        Estructura de la tabla icalsync_accounts.
+        Almacena la configuración de la cuenta compartida de iCloud.
+-->
+<table>
+    <column>
+        <name>id</name>
+        <type>serial</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>enabled</name>
+        <type>boolean</type>
+        <null>NO</null>
+        <default>true</default>
+    </column>
+    <column>
+        <name>account_name</name>
+        <type>character varying(100)</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>apple_id</name>
+        <type>character varying(255)</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>app_specific_password</name>
+        <type>text</type>
+    </column>
+    <column>
+        <name>calendar_url</name>
+        <type>character varying(500)</type>
+    </column>
+    <column>
+        <name>principal_url</name>
+        <type>character varying(500)</type>
+    </column>
+    <column>
+        <name>sync_frequency_minutes</name>
+        <type>integer</type>
+        <null>NO</null>
+        <default>15</default>
+    </column>
+    <column>
+        <name>log_level</name>
+        <type>character varying(20)</type>
+    </column>
+    <column>
+        <name>last_sync_at</name>
+        <type>timestamp</type>
+    </column>
+    <column>
+        <name>created_at</name>
+        <type>timestamp</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>updated_at</name>
+        <type>timestamp</type>
+    </column>
+    <constraint>
+        <name>icalsync_accounts_pkey</name>
+        <type>PRIMARY KEY (id)</type>
+    </constraint>
+</table>

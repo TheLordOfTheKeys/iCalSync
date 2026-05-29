@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : citas.xml
+    Description:
+        Extensión de la tabla citas de PlanetaEscenario.
+        Añade columnas de sincronización iCalSync.
+-->
+<table>
+    <column>
+        <name>idsincronizacion</name>
+        <type>character varying(255)</type>
+    </column>
+    <column>
+        <name>ultima_modificacion</name>
+        <type>timestamp</type>
+    </column>
+    <column>
+        <name>sync_status</name>
+        <type>character varying(20)</type>
+    </column>
+</table>

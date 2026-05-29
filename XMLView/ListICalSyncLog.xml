@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : ListICalSyncLog.xml
+    Author     : Carlos Garcia Gomez <carlos@facturascripts.com>
+    Description:
+        Vista de listado para el log de sincronización iCalSync.
+-->
+<view>
+    <columns>
+        <column name="data" order="1">
+            <widget type="select" fieldname="status" required="true">
+                <title>status</title>
+                <values>
+                    <value>success</value>
+                    <value>error</value>
+                    <value>conflict</value>
+                    <value>skipped</value>
+                </values>
+            </widget>
+            <widget type="text" fieldname="entity_type" required="false">
+                <title>entity</title>
+            </widget>
+            <widget type="number" fieldname="entity_id" required="false">
+                <title>entity-id</title>
+            </widget>
+            <widget type="textarea" fieldname="message" required="true">
+                <title>message</title>
+            </widget>
+            <widget type="datetime" fieldname="created_at" required="false">
+                <title>date</title>
+            </widget>
+        </column>
+    </columns>
+    <filters>
+        <item type="select" fieldname="status" title="status">
+            <values>
+                <value>success</value>
+                <value>error</value>
+                <value>conflict</value>
+                <value>skipped</value>
+            </values>
+        </item>
+        <item type="select" fieldname="entity_type" title="entity">
+            <values>
+                <value>Evento</value>
+                <value>Cita</value>
+            </values>
+        </item>
+        <item type="datepicker" fieldname="created_at" title="date"/>
+    </filters>
+    <modals>
+        <modal name="detail">
+            <widget type="textarea" fieldname="message" title="message">
+                <rows>10</rows>
+            </widget>
+        </modal>
+    </modals>
+</view>

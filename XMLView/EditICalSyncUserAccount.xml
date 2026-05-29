@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : EditICalSyncUserAccount.xml
+    Author     : Carlos Garcia Gomez <carlos@facturascripts.com>
+    Description:
+        Vista de edición para la cuenta de iCloud por usuario.
+-->
+<view>
+    <columns>
+        <column name="data" order="1">
+            <widget type="checkbox" fieldname="enabled">
+                <title>enabled</title>
+                <description>account-enabled</description>
+            </widget>
+            <widget type="text" fieldname="apple_id">
+                <title>icloud-apple-id</title>
+                <description>apple-id-desc</description>
+            </widget>
+            <widget type="password" fieldname="app_specific_password">
+                <title>icloud-password</title>
+                <description>app-specific-password-desc</description>
+            </widget>
+            <widget type="url" fieldname="calendar_url">
+                <title>calendar-url</title>
+                <description>private-calendar-url-desc</description>
+            </widget>
+            <widget type="url" fieldname="principal_url">
+                <title>principal-url</title>
+            </widget>
+            <widget type="checkbox" fieldname="sync_enabled">
+                <title>sync-enabled</title>
+                <description>sync-enabled-desc</description>
+            </widget>
+            <widget type="checkbox" fieldname="show_in_calendar">
+                <title>show-in-calendar</title>
+                <description>show-in-calendar-desc</description>
+            </widget>
+            <widget type="checkbox" fieldname="show_in_dashboard">
+                <title>show-in-dashboard</title>
+                <description>show-in-dashboard-desc</description>
+            </widget>
+            <widget type="datetime" fieldname="last_sync_at">
+                <title>last-sync</title>
+                <readonly>true</readonly>
+            </widget>
+        </column>
+    </columns>
+</view>

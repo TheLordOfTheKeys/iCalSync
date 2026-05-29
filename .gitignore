@@ -1,0 +1,7 @@
+fs-opencode-plugin/
+openspec/
+.atl/
+opencode.json
+connections.json
+/tmp/
+*.zip

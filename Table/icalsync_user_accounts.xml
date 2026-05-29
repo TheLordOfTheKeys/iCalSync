@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Document   : icalsync_user_accounts.xml
+    Description:
+        Estructura de la tabla icalsync_user_accounts.
+        Almacena la configuración de cuentas iCloud por usuario.
+-->
+<table>
+    <column>
+        <name>id</name>
+        <type>serial</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>nick</name>
+        <type>character varying(50)</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>enabled</name>
+        <type>boolean</type>
+        <null>NO</null>
+        <default>true</default>
+    </column>
+    <column>
+        <name>apple_id</name>
+        <type>character varying(255)</type>
+    </column>
+    <column>
+        <name>app_specific_password</name>
+        <type>character varying(500)</type>
+    </column>
+    <column>
+        <name>calendar_url</name>
+        <type>character varying(500)</type>
+    </column>
+    <column>
+        <name>principal_url</name>
+        <type>character varying(500)</type>
+    </column>
+    <column>
+        <name>sync_enabled</name>
+        <type>boolean</type>
+        <null>NO</null>
+        <default>false</default>
+    </column>
+    <column>
+        <name>last_sync_at</name>
+        <type>timestamp</type>
+    </column>
+    <column>
+        <name>show_in_calendar</name>
+        <type>boolean</type>
+        <null>NO</null>
+        <default>true</default>
+    </column>
+    <column>
+        <name>show_in_dashboard</name>
+        <type>boolean</type>
+        <null>NO</null>
+        <default>true</default>
+    </column>
+    <column>
+        <name>created_at</name>
+        <type>timestamp</type>
+        <null>NO</null>
+    </column>
+    <column>
+        <name>updated_at</name>
+        <type>timestamp</type>
+    </column>
+    <constraint>
+        <name>icalsync_user_accounts_pkey</name>
+        <type>PRIMARY KEY (id)</type>
+    </constraint>
+    <constraint>
+        <name>ca_user_accounts_nick</name>
+        <type>FOREIGN KEY (nick) REFERENCES users (nick) ON DELETE CASCADE ON UPDATE CASCADE</type>
+    </constraint>
+    <constraint>
+        <name>un_user_accounts_nick</name>
+        <type>UNIQUE (nick)</type>
+    </constraint>
+</table>

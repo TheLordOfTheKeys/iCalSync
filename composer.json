@@ -1,0 +1,16 @@
+{
+    "name": "facturascripts/icalsync-plugin",
+    "description": "Sincronización bidireccional de eventos y citas con iCloud Calendar vía CalDAV",
+    "type": "facturascripts-plugin",
+    "require": {
+        "php": ">=8.0",
+        "sabre/dav": "^4.6",
+        "sabre/vobject": "^4.5",
+        "ext-sodium": "*",
+        "ext-curl": "*",
+        "ext-xml": "*",
+        "ext-mbstring": "*"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
