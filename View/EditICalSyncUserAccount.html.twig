@@ -1,0 +1,121 @@
+{#**
+ * This file is part of ICalSync plugin for FacturaScripts
+ * Copyright (C) 2025 Carlos Garcia Gomez <carlos@facturascripts.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *#}
+
+{% extends "Master/MenuTemplate.html.twig" %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4">
+        <i class="fa-solid fa-user-cog me-2"></i>
+        {{ i18n.trans('icalsync-user-config') }}
+    </h1>
+
+    {% if fsc.testResult is same as(true) %}
+    <div class="alert alert-success">{{ i18n.trans('test-connection-success') }}</div>
+    {% elseif fsc.testResult is same as(false) %}
+    <div class="alert alert-danger">{{ i18n.trans('test-connection-failure') }}: {{ fsc.testMessage }}</div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" action="{{ fsc.url() }}">
+                <input type="hidden" name="action" value="save">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">{{ i18n.trans('enabled') }}</label>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="enabled" value="1" class="form-check-input" id="enabled"
+                                   {% if fsc.userAccount.enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="enabled">{{ i18n.trans('sync-enabled') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ i18n.trans('sync-enabled') }}</label>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="sync_enabled" value="1" class="form-check-input" id="sync_enabled"
+                                   {% if fsc.userAccount.sync_enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="sync_enabled">{{ i18n.trans('sync-enabled-desc') }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">{{ i18n.trans('icloud-apple-id') }}</label>
+                        <input type="email" name="apple_id" class="form-control"
+                               value="{{ fsc.userAccount.apple_id }}" autocomplete="username">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ i18n.trans('app-specific-password') }}</label>
+                        <input type="password" name="app_specific_password" class="form-control"
+                               placeholder="{{ i18n.trans('app-specific-password-help') }}" autocomplete="current-password">
+                        <div class="form-text">{{ i18n.trans('app-specific-password-help') }}</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">{{ i18n.trans('calendar-url') }}</label>
+                        <input type="text" name="calendar_url" class="form-control"
+                               value="{{ fsc.userAccount.calendar_url }}" placeholder="Se autocompleta al probar conexión">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ i18n.trans('principal-url') }}</label>
+                        <input type="text" name="principal_url" class="form-control"
+                               value="{{ fsc.userAccount.principal_url }}">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="show_in_calendar" value="1" class="form-check-input" id="show_in_calendar"
+                                   {% if fsc.userAccount.show_in_calendar %}checked{% endif %}>
+                            <label class="form-check-label" for="show_in_calendar">{{ i18n.trans('show-in-calendar') }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="show_in_dashboard" value="1" class="form-check-input" id="show_in_dashboard"
+                                   {% if fsc.userAccount.show_in_dashboard %}checked{% endif %}>
+                            <label class="form-check-label" for="show_in_dashboard">{{ i18n.trans('show-in-dashboard') }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                {% if fsc.userAccount.last_sync_at %}
+                <div class="alert alert-info">
+                    <i class="fa-solid fa-clock me-1"></i>
+                    {{ i18n.trans('last-sync') }}: {{ fsc.userAccount.last_sync_at }}
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-save me-1"></i> {{ i18n.trans('save') }}
+                    </button>
+                    <a href="{{ fsc.url() }}?action=test-connection" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-plug me-1"></i> {{ i18n.trans('test-connection') }}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
