@@ -74,6 +74,10 @@ final class Init extends InitClass
             $this->addColumnIfMissing($db, 'citas', 'sync_status', 'character varying(20)');
         }
 
+        if ($db->tableExists('icalsync_items')) {
+            $this->addColumnIfMissing($db, 'icalsync_items', 'origin', 'character varying(10)');
+        }
+
         if ($db->tableExists('crm_oportunidades')) {
             $this->addColumnIfMissing($db, 'crm_oportunidades', 'idsincronizacion', 'character varying(255)');
             $this->addColumnIfMissing($db, 'crm_oportunidades', 'ultima_modificacion', 'timestamp');

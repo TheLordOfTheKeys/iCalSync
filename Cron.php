@@ -19,22 +19,34 @@
 
 namespace FacturaScripts\Plugins\ICalSync;
 
-use FacturaScripts\Core\Template\CronClass;
-use FacturaScripts\Core\Tools;
-
-final class Cron extends CronClass
-{
-    public function run(): void
+/**
+ * Cron job registration for ICalSync plugin.
+ *
+ * Registered via FacturaScripts cron system when available.
+ * For standalone usage, use cron-trigger.php directly.
+ *
+ * @author Carlos Garcia Gomez <carlos@facturascripts.com>
+ */
+if (class_exists('\FacturaScripts\Core\Template\CronClass')) {
+    class Cron extends \FacturaScripts\Core\Template\CronClass
     {
-        $frequency = (int) Tools::settings('icalsync', 'sync_frequency_minutes', 15);
-        if ($frequency < 1) {
-            $frequency = 15;
-        }
+        public function run(): void
+        {
+            $frequency = (int) \FacturaScripts\Core\Tools::settings('icalsync', 'sync_frequency_minutes', 15);
+            if ($frequency < 1) {
+                $frequency = 15;
+            }
 
-        $this->job('icalsync-sync')
-            ->every($frequency . ' minutes')
-            ->run(function () {
-                CronJob\ICalSync::run();
-            });
+            $this->job('icalsync-sync')
+                ->every($frequency . ' minutes')
+                ->run(function () {
+                    CronJob\ICalSync::run();
+                });
+        }
+    }
+} else {
+    // Fallback: empty class for older FS versions without CronClass
+    class Cron
+    {
     }
 }

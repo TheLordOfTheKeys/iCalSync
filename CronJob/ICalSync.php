@@ -105,6 +105,8 @@ class ICalSync
 
         self::logCronResult($totalStats);
 
+        Tools::settingsSave('icalsync', 'last_cron_run', date('Y-m-d H:i:s'));
+
         return $totalStats;
     }
 

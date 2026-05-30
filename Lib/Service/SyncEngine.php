@@ -428,6 +428,7 @@ class SyncEngine
             $syncItem->caldav_uid = $result['uid'];
             $syncItem->caldav_etag = $result['etag'] ?? '';
             $syncItem->direction = 'bidirectional';
+                $syncItem->origin = 'icloud';
             $syncItem->last_sync_at = date('Y-m-d H:i:s');
             $syncItem->sync_status = 'synced';
             $syncItem->save();
@@ -543,6 +544,7 @@ class SyncEngine
                 $syncItem->caldav_uid = $uid;
                 $syncItem->caldav_etag = $etag;
                 $syncItem->direction = 'bidirectional';
+                $syncItem->origin = 'icloud';
                 $syncItem->last_sync_at = date('Y-m-d H:i:s');
                 $syncItem->sync_status = 'synced';
                 $syncItem->save();
@@ -631,7 +633,7 @@ class SyncEngine
                 return; // Local is newer or equal, skip
             }
 
-            $cita->titulo = (string)($vEvent->SUMMARY ?? $cita->titulo);
+            $cita->titulo = self::stripImportPrefix((string)($vEvent->SUMMARY ?? $cita->titulo));
             $cita->descripcion = (string)($vEvent->DESCRIPTION ?? $cita->descripcion);
             $cita->ubicacion = (string)($vEvent->LOCATION ?? $cita->ubicacion);
 
@@ -761,6 +763,7 @@ class SyncEngine
                         $syncItem->caldav_uid = $result['uid'];
                         $syncItem->caldav_etag = $result['etag'] ?? '';
                         $syncItem->direction = 'bidirectional';
+                $syncItem->origin = 'icloud';
                         $syncItem->last_sync_at = date('Y-m-d H:i:s');
                         $syncItem->sync_status = 'synced';
                         $syncItem->save();
@@ -1058,7 +1061,6 @@ class SyncEngine
 
             $items = (new ICalSyncItem())->all([
                 new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('entity_type', $entityType),
-                new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('direction', 'export'),
             ], [], 0, 0);
 
             foreach ($items as $item) {
@@ -1075,8 +1077,8 @@ class SyncEngine
                 // Entity deleted — remove from iCloud
                 $deleted = $client->deleteEvent($calendar->calendar_url, $item->caldav_uid, $item->caldav_etag);
                 if ($deleted || null === $deleted) {
-                    // null means 404 (already deleted)
-                    $item->delete();
+                    $item->sync_status = 'deleted';
+                    $item->save();
                     $this->stats['deleted']++;
                 }
             }
@@ -1154,6 +1156,7 @@ class SyncEngine
                         $syncItem->caldav_uid = $result['uid'] ?? '';
                         $syncItem->caldav_etag = $result['etag'] ?? '';
                         $syncItem->direction = 'export';
+                $syncItem->origin = 'fs';
                         $syncItem->last_sync_at = date('Y-m-d H:i:s');
                         $syncItem->sync_status = 'synced';
                         $syncItem->calendar_id = $calendar->id;
@@ -1190,6 +1193,7 @@ class SyncEngine
 
             $remoteEvents = $client->listEvents($calendar->calendar_url);
             $imported = 0;
+            $remoteUids = [];
 
             foreach ($remoteEvents as $caldavEvent) {
                 if ($this->isTimeBudgetExceeded() || $imported >= $this->batchSize) {
@@ -1213,6 +1217,7 @@ class SyncEngine
                     if (empty($uid)) {
                         continue;
                     }
+                    $remoteUids[$uid] = true;
 
                     // Check if already imported
                     $syncItem = ICalSyncItem::findByCaldavUid($uid);
@@ -1277,6 +1282,7 @@ class SyncEngine
                         $item->caldav_uid = $uid;
                         $item->caldav_etag = $caldavEvent['etag'] ?? '';
                         $item->direction = 'import';
+                $item->origin = 'icloud';
                         $item->last_sync_at = date('Y-m-d H:i:s');
                         $item->sync_status = 'synced';
                         $item->save();
@@ -1292,10 +1298,47 @@ class SyncEngine
                 }
             }
 
+            // Clean up FS entities whose iCloud origin event was deleted
+            $this->cleanupICloudOriginItems($calendar, $remoteUids);
+
             if ($imported > 0) {
             }
         } catch (\Exception $e) {
             Tools::log()->error('sync-import-error', ['%error%' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete FS entities (Citas) whose iCloud origin event was deleted remotely.
+     */
+    private function cleanupICloudOriginItems(ICalSyncCalendar $calendar, array $remoteUids): void
+    {
+        if (empty($remoteUids)) {
+            return;
+        }
+
+        $items = (new ICalSyncItem())->all([
+            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('origin', 'icloud'),
+            new \FacturaScripts\Core\Base\DataBase\DataBaseWhere('entity_type', 'Cita'),
+        ], [], 0, 100);
+
+        foreach ($items as $item) {
+            if (empty($item->caldav_uid) || isset($remoteUids[$item->caldav_uid])) {
+                continue; // Still exists remotely
+            }
+
+            // Delete the Cita from FS
+            $citaClass = 'FacturaScripts\\Plugins\\PlanetaEscenario\\Model\\Cita';
+            if (class_exists($citaClass)) {
+                $cita = new $citaClass();
+                if ($cita->loadFromCode($item->entity_id)) {
+                    $cita->delete();
+                    $this->stats['deleted']++;
+                }
+            }
+            // Mark as deleted, keep trace
+            $item->sync_status = 'deleted';
+            $item->save();
         }
     }
 
@@ -1322,6 +1365,20 @@ class SyncEngine
             Tools::log()->error('sync-vevent-map-error', ['%error%' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Strip export prefix from SUMMARY when importing back to FS.
+     */
+    private static function stripImportPrefix(string $summary): string
+    {
+        $prefixes = ['EVENTO | ', 'CITA | ', 'LEAD | '];
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($summary, $prefix)) {
+                return substr($summary, strlen($prefix));
+            }
+        }
+        return $summary;
     }
 
     /**
@@ -1508,6 +1565,7 @@ class SyncEngine
                 $syncItem->caldav_uid = $result['uid'];
                 $syncItem->caldav_etag = $result['etag'] ?? '';
                 $syncItem->direction = 'export';
+                $syncItem->origin = 'fs';
                 $syncItem->last_sync_at = date('Y-m-d H:i:s');
                 $syncItem->sync_status = 'synced';
                 try {
@@ -1654,6 +1712,7 @@ class SyncEngine
                 $syncItem->last_sync_at = date('Y-m-d H:i:s');
                 $syncItem->sync_status = 'synced';
                 $syncItem->direction = 'export';
+                $syncItem->origin = 'fs';
                 try {
                     $syncItem->save();
                     $this->stats['created']++;

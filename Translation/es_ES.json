@@ -170,5 +170,8 @@
     "force-export-all-detail-2": "Se volverán a crear todos los eventos, citas y oportunidades en iCloud",
     "force-export-all-detail-3": "Los eventos de iCloud que no existan en FacturaScripts se importarán como Citas",
     "force-export-all-confirm": "Sí, forzar exportación",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "calendars-found": "Calendarios encontrados",
+    "selected": "Seleccionado",
+    "select": "Seleccionar"
 }

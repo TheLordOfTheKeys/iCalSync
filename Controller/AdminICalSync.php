@@ -67,6 +67,9 @@ class AdminICalSync extends Controller
     /** @var array|null */
     public $syncStats = null;
 
+    /** @var string */
+    public $lastCronRun = '';
+
     /**
      * Returns basic page attributes.
      *
@@ -115,6 +118,9 @@ class AdminICalSync extends Controller
             case 'force-sync':
                 $this->forceSyncAction();
                 break;
+            case 'sync-ajax':
+                $this->syncAjaxAction();
+                break;
             case 'force-export-all':
                 $this->forceExportAllAction();
                 break;
@@ -143,6 +149,10 @@ class AdminICalSync extends Controller
         $logModel = new ICalSyncLog();
         $where = [new DataBaseWhere('status', 'error')];
         $this->recentErrors = $logModel->all($where, ['created_at' => 'DESC'], 10, 0);
+
+        // Read last cron run from file
+        $cronFile = __DIR__ . '/../last_cron_run.txt';
+        $this->lastCronRun = file_exists($cronFile) ? file_get_contents($cronFile) : '';
     }
 
     /**
@@ -434,6 +444,33 @@ class AdminICalSync extends Controller
 
         // Now run normal force sync
         $this->forceSyncAction();
+    }
+
+    private function syncAjaxAction(): void
+    {
+        $accountModel = new ICalSyncAccount();
+        $accounts = $accountModel->all([new DataBaseWhere('enabled', true)]);
+
+        $totalStats = ['created' => 0, 'updated' => 0, 'deleted' => 0, 'skipped' => 0, 'errors' => 0, 'conflicts' => 0];
+
+        foreach ($accounts as $account) {
+            try {
+                $engine = new SyncEngine($account);
+                $result = $engine->run();
+                foreach (['created', 'updated', 'deleted', 'skipped', 'errors', 'conflicts'] as $key) {
+                    $totalStats[$key] += $result[$key] ?? 0;
+                }
+            } catch (\Exception $e) {
+                $totalStats['errors']++;
+            }
+        }
+
+        // Output JSON and exit
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode($totalStats);
+        die;
     }
 
     /**

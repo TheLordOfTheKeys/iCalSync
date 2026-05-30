@@ -49,6 +49,10 @@
         <null>NO</null>
     </column>
     <column>
+        <name>origin</name>
+        <type>character varying(10)</type>
+    </column>
+    <column>
         <name>error_message</name>
         <type>text</type>
     </column>

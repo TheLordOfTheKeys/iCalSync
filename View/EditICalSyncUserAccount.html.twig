@@ -26,7 +26,43 @@
     </h1>
 
     {% if fsc.testResult is same as(true) %}
-    <div class="alert alert-success">{{ i18n.trans('test-connection-success') }}</div>
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fa-solid fa-circle-check me-1"></i> {{ i18n.trans('test-connection-success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% if fsc.discoveredCalendars is not empty %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fa-solid fa-calendar me-1"></i> {{ i18n.trans('calendars-found') }} ({{ fsc.discoveredCalendars|length }})
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>{{ i18n.trans('calendar-name') }}</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for cal in fsc.discoveredCalendars %}
+                    <tr {% if cal.url == fsc.userAccount.calendar_url %}class="table-primary"{% endif %}>
+                        <td>
+                            <span class="color-box" style="background:{{ cal.color|default('#0d6efd') }};width:16px;height:16px;display:inline-block;border-radius:3px;vertical-align:middle;margin-right:6px"></span>
+                            {{ cal.displayname }}
+                        </td>
+                        <td class="text-end">
+                            {% if cal.url == fsc.userAccount.calendar_url %}
+                            <span class="badge bg-primary">{{ i18n.trans('selected') }}</span>
+                            {% else %}
+                            <a href="{{ fsc.url() }}?action=select-calendar&url={{ cal.url|url_encode }}" class="btn btn-sm btn-outline-primary">
+                                {{ i18n.trans('select') }}
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
     {% elseif fsc.testResult is same as(false) %}
     <div class="alert alert-danger">{{ i18n.trans('test-connection-failure') }}: {{ fsc.testMessage }}</div>
     {% endif %}

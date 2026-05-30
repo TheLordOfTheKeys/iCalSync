@@ -42,6 +42,9 @@ class EditICalSyncUserAccount extends Controller
     /** @var string */
     public $testMessage;
 
+    /** @var array */
+    public $discoveredCalendars = [];
+
     public function getPageData(): array
     {
         $pageData = parent::getPageData();
@@ -52,12 +55,10 @@ class EditICalSyncUserAccount extends Controller
         return $pageData;
     }
 
-    public function run(): void
+    public function privateCore(&$response, $user, $permissions)
     {
-        parent::run();
+        parent::privateCore($response, $user, $permissions);
 
-        // Ensure user is logged in
-        $user = $this->user;
         if (null === $user || empty($user->nick)) {
             Tools::log()->error('user-not-found');
             $this->redirect($this->url());
@@ -69,12 +70,14 @@ class EditICalSyncUserAccount extends Controller
             case 'test-connection':
                 $this->testConnectionAction();
                 break;
+            case 'select-calendar':
+                $this->selectCalendarAction();
+                break;
             case 'save':
                 $this->saveAction();
                 break;
         }
 
-        // Load or create the user account
         $this->loadUserAccount($user->nick);
     }
 
@@ -130,6 +133,26 @@ class EditICalSyncUserAccount extends Controller
         $this->redirect($this->url());
     }
 
+    private function selectCalendarAction(): void
+    {
+        $url = $this->request->get('url', '');
+        if (empty($url)) {
+            return;
+        }
+
+        $nick = $this->user->nick;
+        $account = ICalSyncUserAccount::findByNick($nick);
+        if (null === $account) {
+            $account = new ICalSyncUserAccount();
+            $account->nick = $nick;
+        }
+
+        $account->calendar_url = $url;
+        $account->save();
+
+        $this->loadUserAccount($nick);
+    }
+
     /**
      * Test the iCloud CalDAV connection for this user.
      */
@@ -152,28 +175,24 @@ class EditICalSyncUserAccount extends Controller
 
         $result = $account->testConnection();
 
-        if ($result['success']) {
-            if (!empty($result['principal_url'])) {
-                $account->principal_url = $result['principal_url'];
-                // Save discovered principal URL
-                $account->save();
-            }
-
-            Tools::log()->info('test-connection-success', [
-                '%url%' => $result['principal_url'] ?? '',
-            ]);
-
-            // Discover and save calendars info
-            if (!empty($result['calendars'])) {
-                $firstCalendar = $result['calendars'][0];
-                if (empty($account->calendar_url)) {
-                    $account->calendar_url = $firstCalendar['url'];
+            if ($result['success']) {
+                if (!empty($result['principal_url'])) {
+                    $account->principal_url = $result['principal_url'];
                     $account->save();
                 }
-            }
 
-            $this->testResult = true;
-        } else {
+                // Store discovered calendars for modal display
+                $this->discoveredCalendars = $result['calendars'] ?? [];
+
+                // Auto-select first calendar if none configured
+                if (empty($account->calendar_url) && !empty($this->discoveredCalendars)) {
+                    $account->calendar_url = $this->discoveredCalendars[0]['url'];
+                    $account->save();
+                }
+
+                Tools::log()->info('test-connection-success', ['%url%' => $result['principal_url'] ?? '']);
+                $this->testResult = true;
+            } else {
             Tools::log()->error('test-connection-failure', [
                 '%msg%' => $result['message'] ?? '',
             ]);
